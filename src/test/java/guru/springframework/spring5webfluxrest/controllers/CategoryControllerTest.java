@@ -13,6 +13,7 @@ import reactor.core.publisher.Mono;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 
 public class CategoryControllerTest {
 
@@ -75,5 +76,37 @@ public class CategoryControllerTest {
                 .exchange()
                 .expectStatus()
                 .isOk();
+    }
+
+    @Test
+    public void patch() {
+        BDDMockito.given(categoryRepository.findById(anyString()))
+                .willReturn(Mono.just(Category.builder().description("some description").build()));
+        BDDMockito.given(categoryRepository.save(any(Category.class)))
+                .willReturn(Mono.just(Category.builder().description("some description").build()));
+        Mono<Category> catToSave = Mono.just(Category.builder().description("category1").build());
+        webTestClient.patch()
+                .uri("/api/v1/categories/dwasdfdfswera")
+                .body(catToSave, Category.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
+        BDDMockito.verify(categoryRepository).save(any());
+    }
+
+    @Test
+    public void patchWithoutChange() {
+        BDDMockito.given(categoryRepository.findById(anyString()))
+                .willReturn(Mono.just(Category.builder().description("some description").build()));
+        BDDMockito.given(categoryRepository.save(any(Category.class)))
+                .willReturn(Mono.just(Category.builder().build()));
+        Mono<Category> catToSave = Mono.just(Category.builder().description("some description").build());
+        webTestClient.patch()
+                .uri("/api/v1/categories/dwasdfdfswera")
+                .body(catToSave, Category.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
+        BDDMockito.verify(categoryRepository, Mockito.never()).save(any());
     }
 }
